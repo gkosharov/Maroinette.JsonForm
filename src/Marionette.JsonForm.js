@@ -18,7 +18,63 @@
         root.Marionette.FormView = factory(root.jQuery, root._, root.Backbone, root.Marionette, root.Backbone.Relational, root.Backbone.Stickit, root.Backbone.Validation);
     }
 }(this, function ($, _, Backbone, Marionette) {
-    "use strict";
+    "use strict"
+    /* template register should be defined by the client */
+    var TemplateRegister = {};
+    var TemplateManager = Marionette.TemplateManager = {
+        register: JSON.parse(TemplateRegister),
+
+        getTemplate: function(templateId, data){
+            this.loadedTemplates = this.loadedTemplates || {};
+
+            //if tempalte is already loaded
+            if (this.loadedTemplates[templateId]){
+                return this.loadedTemplates[templateId];
+            }
+
+            var contextPath = this._getContextPath();
+            var url = _.template(this.register[templateId], {contextPath: contextPath});
+
+            url = require.toUrl(this.register[templateId]);
+
+            if(!url){
+                console.log(templateId + "not found in the register.");
+            }
+
+            var template = this.getCompiledTemplate(url, data);
+
+            //template caching
+            this.loadedTemplates[templateId] = template;
+
+            return template;
+        },
+        getTemplateFromUrl: function(url){
+            var template = $.ajax({
+                url     : url,
+                async   : false
+            }).responseText;
+
+            return template;
+        },
+        getFunctionTemplate: function (templateId, data){
+            var templateHTML = this.getTemplate(templateId, data);
+            return _.template(templateHTML);
+        },
+        getCompiledTemplate: function(url, data){
+            var templateHTML = this.getTemplateFromUrl(url);
+            var templateFunction = _.template(templateHTML);
+            var compiledTemplate = "";
+            if(data) {
+                compiledTemplate = templateFunction(data);
+            }else{
+                compiledTemplate = templateHTML;
+            }
+            return compiledTemplate;
+        },
+        _getContextPath: function(){
+            return location.origin + location.pathname;
+        }
+    };
 
     var FormModel = Backbone.JsonForm = Backbone.RelationalModel.extend({
         relations: [{
@@ -164,7 +220,7 @@
             this._setupLayout();
             this._applyLayout();
             this._setupBindings(this.options);
-            this._setupValidation(this.options);
+            //this._setupValidation(this.options);
             if(Backbone.Validation)
                 Backbone.Validation.bind(this);
 
@@ -352,7 +408,7 @@
                             break;
                         case "decimal":
                             var formatFn = this._formatDecimal;
-                            this.addBinding(this.model, "#" + prop, {
+                            this.addBinding(this.model, "[data-name='" + prop + "']", {
                                 observe: id,
 
                                 onGet: function (val, options) {
@@ -363,7 +419,7 @@
                             break;
                         case "integer":
                             var formatFn = this._formatNumber;
-                            this.addBinding(this.model, "#" + prop, {
+                            this.addBinding(this.model, "[data-name='" + prop + "']", {
                                 observe: id,
 
                                 onGet: function (val, options) {
@@ -374,10 +430,10 @@
                             break;
                         case "date":
                             var formatFn = this._formatDate;
-                            this.addBinding(this.model, "#" + prop, {
+                            this.addBinding(this.model, "[data-name='" + prop + "']", {
                                 observe: id,
                                 selectOptions: {
-                                    validate: true
+                                    validate: false
                                 },
                                 onGet: function (val, options) {
                                     if (val && val !== "") {
@@ -421,7 +477,7 @@
                             });
                             break;
                         case "select":
-                            prop = "select#" + id;
+                            prop = "select[data-name='" + id + "']";
                             var dataSource = item.get("dataSource");
                             var collection = [];
                             if (dataSource) {
@@ -437,7 +493,7 @@
                                         label: "",
                                         value: null
                                     },
-                                    validate: true,
+                                    validate: false,
                                     collection: collection
                                 },
 
@@ -461,11 +517,11 @@
                             });
                             break;
                         case "boolean":
-                            prop = "#" + id;
+                            prop = "[data-name='" + id + "']";
                             this.addBinding(this.model, prop, {
                                 observe: id,
                                 selectOptions: {
-                                    validate: true
+                                    validate: false
                                 },
                                 onSet: function (val, options) {
                                     try {
@@ -486,11 +542,11 @@
                             });
                             break;
                         default:
-                            prop = "#" + id;
+                            prop =  "[data-name='" + id + "']";
                             this.addBinding(this.model, prop, {
                                 observe: id,
                                 setOptions: {
-                                    validate: true
+                                    validate: false
                                 },
                                 onSet: function (val, options) {
                                     try {

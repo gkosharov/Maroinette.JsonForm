@@ -1,4 +1,4 @@
-## Marionette.JsonForm [![Build Status](https://travis-ci.org/gkosharov/Maroinette.JsonForm.svg)](https://travis-ci.org/gkosharov/Maroinette.JsonForm)
+## Marionette.JsonForm [![Build Status](https://travis-ci.org/gkosharov/Maroinette.JsonForm.svg)](https://travis-ci.org/gkosharov/Maroinette.JsonForm) - still work in progress
 
 Marionette.JsonForm is Backbone.Marionette plugin which renders an json as a form as long as each element provides the necessary meta data. The meta-data is described in the json-schema.
 
@@ -61,15 +61,24 @@ In this example the formView will use the default HTML templates provided with t
 
  ```
  {
-     "id": "containerForm",
-     "type": "object",
-     "label": "Container Form"
-     "properties": [{
-         "id": "nestedForm",
-         "type": "object",
-         "label": "Nested Form"
-         "properties": [/*some properties*/]
-     }]
+   "id": "containerForm",
+   "type": "object",
+   "label": "Container Form",
+   "properties": [
+     {
+       "id": "nestedForm",
+       "type": "object",
+       "label": "Nested Form",
+       "properties": [
+         {
+           "id": "nestedForm",
+           "type": "object",
+           "label": "Nested Form",
+           "properties": []
+         }
+       ]
+     }
+   ]
  }
  ```
  
